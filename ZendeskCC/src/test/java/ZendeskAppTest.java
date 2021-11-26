@@ -7,7 +7,6 @@ import org.junit.*;
 public class ZendeskAppTest {
 
     private static final String singleTicket = "https://zccamelia.zendesk.com/api/v2/tickets/";
-    private static final String token = "cuiwen423@gmail.com:dwj9-A@G+sxNPDp";
 
     public JSONObject createTestTicket(){
         String stringToParse = "{\n" +
