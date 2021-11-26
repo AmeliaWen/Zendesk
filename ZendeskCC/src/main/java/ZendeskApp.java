@@ -18,7 +18,7 @@ public class ZendeskApp {
             Scanner scanner = new Scanner(System.in);
             while (true){
                 try {
-                    System.out.println("Ticket Listing Options\n - 1. Displayall: Display ticket list \n - 2. Display,{ticketid} : Display Ticket information \n - 3. Quit: Exit Application\n - 4. Help");
+                    System.out.println("Ticket Listing Options\n - 1. Displayall: Display ticket list \n - 2. Display,{ticketid} : Display Ticket information \n - 3. Quit: Exit Application");
                     System.out.println("Please enter an option");
                     String line = scanner.nextLine();
                     int a = Integer.parseInt(line);
@@ -93,7 +93,6 @@ public class ZendeskApp {
             }
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(response);
-            System.out.println(json);
             JSONObject ticketInfo = (JSONObject) json.get("ticket");
             if (ticketInfo == null){
                 System.out.println("NO Ticket Information found!");
