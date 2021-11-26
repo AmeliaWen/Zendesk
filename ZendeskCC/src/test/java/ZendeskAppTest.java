@@ -6,8 +6,13 @@ import org.junit.*;
 
 public class ZendeskAppTest {
 
+    // Zendesk api
     private static final String singleTicket = "https://zccamelia.zendesk.com/api/v2/tickets/";
 
+    /**
+     * create one test ticket (for query one ticket info)
+     * @return
+     */
     public JSONObject createTestTicket(){
         String stringToParse = "{\n" +
                 "  \"ticket\": {\n" +
@@ -77,7 +82,10 @@ public class ZendeskAppTest {
         }
     }
 
-
+    /**
+     * create lists of tickets for testing purpose
+     * @return
+     */
     public JSONObject createTickets(){
         String stringToParse = "{\n" +
                 "   \"tickets\":[\n" +

@@ -10,6 +10,7 @@ import org.json.simple.parser.ParseException;
 
 public class ZendeskApp {
 
+    // token and api information
     private static final String singleTicket = "https://zccamelia.zendesk.com/api/v2/tickets/";
     private static final String token = "cuiwen423@gmail.com:dwj9-A@G+sxNPDp";
 
@@ -22,6 +23,7 @@ public class ZendeskApp {
                     System.out.println("Please enter an option");
                     String line = scanner.nextLine();
                     int a = Integer.parseInt(line);
+                    // for three options
                     switch (a) {
                         case 1:
                             queryAllTickets();
@@ -46,6 +48,10 @@ public class ZendeskApp {
         }
     }
 
+    /**
+     * parse tickets json and dealing with pages
+     * @param jsonObject
+     */
     public static void parseJson(JSONObject jsonObject){
         while (jsonObject != null){
             boolean hasNext = false, hasPrev = false;
@@ -60,11 +66,14 @@ public class ZendeskApp {
             String line = "";
             Scanner scanner = new Scanner(System.in);
             line = scanner.nextLine();
+            // has next page
             if (hasNext && line.toLowerCase().contains("next")){
                 jsonObject = queryTickForEachPage(((JSONObject)jsonObject.get("links")).get("next").toString(),false);
             } else if (hasPrev && line.toLowerCase().contains("prev")) {
+                // has previous page
                 jsonObject = queryTickForEachPage(((JSONObject)jsonObject.get("links")).get("prev").toString(), false);
             } else if (line.toLowerCase().contains("exit")){
+                // go back to listing options
                 System.out.println("Going back to original console ...");
                 return;
             } else {
@@ -73,6 +82,14 @@ public class ZendeskApp {
         }
     }
 
+
+    /**
+     * output information of one ticket in the console
+     * output "NO Ticket Information found!" when ticket not exists
+     * @param singleTicket: Zendesk API link
+     * @param tid: ticket id
+     * @return
+     */
     public static int queryTicketById(String singleTicket, String tid) {
         if (tid == null) {
             System.out.println("Please enter valid ID");
@@ -109,13 +126,18 @@ public class ZendeskApp {
         return id;
     }
 
+    /**
+     * format one ticket output
+     * @param ticket
+     * @return success of displaying tickets
+     */
     public static boolean displayTicket(JSONObject ticket){
         if (ticket == null) {
             System.out.println("Empty Ticket");
             return false;
         }
         // ticket format:
-        // subject; created_at; description; type; id; url; priority; recipient; status; is_public
+        // id; subject; created_at; type; updated_at; priority; url; recipient; status
         String[] useful_params = new String[]{"id", "subject", "created_at", "type", "updated_at", "priority", "url", "recipient", "status"};
         StringBuilder result = new StringBuilder("TICKET info: ");
         for (String data : useful_params){
@@ -127,6 +149,12 @@ public class ZendeskApp {
         return true;
     }
 
+    /**
+     * query all tickets json for each page
+     * @param page: Zendesk CURL link for each page
+     * @param first: if it is the first page
+     * @return
+     */
     public static JSONObject queryTickForEachPage(String page, boolean first){
         String[] commands = {"curl", page, "-v", "-u", token};
         Process process = null;
@@ -159,6 +187,11 @@ public class ZendeskApp {
         return null;
     }
 
+    /**
+     * Display all the tickets information in one page
+     * @param json ticket information in json format
+     * @return: success of displaying tickets
+     */
     public static boolean displayTickets(JSONObject json) {
         if (json.get("tickets") != null){
             for (Object object : (JSONArray)json.get("tickets")){
@@ -171,6 +204,9 @@ public class ZendeskApp {
         return true;
     }
 
+    /**
+     * the first method executed for listing all tickets, for first page
+     */
     public static void queryAllTickets() {
         String query = singleTicket + "?page[size]=25";
         queryTickForEachPage(query,true);
