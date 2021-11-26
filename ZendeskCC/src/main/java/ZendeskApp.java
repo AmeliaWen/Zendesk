@@ -1,9 +1,6 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Scanner;
 
 import org.json.simple.JSONArray;
@@ -32,7 +29,7 @@ public class ZendeskApp {
                         case 2:
                             System.out.println("Enter Ticket ID");
                             String tid = scanner.nextLine();
-                            queryTicketById(tid);
+                            queryTicketById(singleTicket, tid);
                             break;
                         case 3:
                             System.out.println("Exit Application");
@@ -49,21 +46,22 @@ public class ZendeskApp {
         }
     }
 
-    private static void parseJson(JSONObject jsonObject){
+    public static void parseJson(JSONObject jsonObject){
         while (jsonObject != null){
             boolean hasNext = false, hasPrev = false;
-            if ((boolean)((JSONObject)jsonObject.get("meta")).get("has_more")){
+            if (jsonObject.get("meta") != null  && ((boolean)((JSONObject)jsonObject.get("meta")).get("has_more"))){
                 System.out.println("enter NEXT for next page");
                 hasNext = true;
             }
-            if (((JSONObject)jsonObject.get("links")).get("prev") != null){
+            if (jsonObject.get("links") != null && ((JSONObject)jsonObject.get("links")).get("prev") != null){
                 System.out.println("enter PREV for previous page");
                 hasPrev = true;
             }
+            String line = "";
             Scanner scanner = new Scanner(System.in);
-            String line = scanner.nextLine();
+            line = scanner.nextLine();
             if (hasNext && line.toLowerCase().contains("next")){
-                jsonObject = queryTickForEachPage(((JSONObject)jsonObject.get("links")).get("next").toString(), false);
+                jsonObject = queryTickForEachPage(((JSONObject)jsonObject.get("links")).get("next").toString(),false);
             } else if (hasPrev && line.toLowerCase().contains("prev")) {
                 jsonObject = queryTickForEachPage(((JSONObject)jsonObject.get("links")).get("prev").toString(), false);
             } else if (line.toLowerCase().contains("exit")){
@@ -75,10 +73,10 @@ public class ZendeskApp {
         }
     }
 
-    private static void queryTicketById(String tid) {
+    public static int queryTicketById(String singleTicket, String tid) {
         if (tid == null) {
             System.out.println("Please enter valid ID");
-            return;
+            return -1;
         }
         int id = Integer.parseInt(tid);
         String ticket = singleTicket + id+".json";
@@ -99,20 +97,23 @@ public class ZendeskApp {
             JSONObject ticketInfo = (JSONObject) json.get("ticket");
             if (ticketInfo == null){
                 System.out.println("NO Ticket Information found!");
-                return;
+                return -1;
             }
             displayTicket(ticketInfo);
         } catch (IOException e) {
             System.out.println("Unable to query Zendesk API");
+            return -1;
         } catch (ParseException e) {
             System.out.println("Unable to parse response from Zendesk");
+            return -1;
         }
+        return id;
     }
 
-    private static void displayTicket(JSONObject ticket){
+    public static boolean displayTicket(JSONObject ticket){
         if (ticket == null) {
             System.out.println("Empty Ticket");
-            return;
+            return false;
         }
         // ticket format:
         // subject; created_at; description; type; id; url; priority; recipient; status; is_public
@@ -124,9 +125,10 @@ public class ZendeskApp {
             result.append(", ");
         }
         System.out.println(result.toString());
+        return true;
     }
 
-    private static JSONObject queryTickForEachPage(String page, boolean first){
+    public static JSONObject queryTickForEachPage(String page, boolean first){
         String[] commands = {"curl", page, "-v", "-u", token};
         Process process = null;
         try {
@@ -140,20 +142,12 @@ public class ZendeskApp {
             }
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(response);
-            System.out.println(json);
             if (json == null){
                 System.out.println("No response acquired");
                 return null;
             }
             // display tickets
-            if (json.get("tickets") != null){
-                for (Object object : (JSONArray)json.get("tickets")){
-                    JSONObject ticket = (JSONObject)object;
-                    if (ticket != null){
-                        displayTicket(ticket);
-                    }
-                }
-            }
+            displayTickets(json);
             if (first){
                 parseJson(json);
             }
@@ -166,8 +160,20 @@ public class ZendeskApp {
         return null;
     }
 
-    private static void queryAllTickets() {
+    public static boolean displayTickets(JSONObject json) {
+        if (json.get("tickets") != null){
+            for (Object object : (JSONArray)json.get("tickets")){
+                JSONObject ticket = (JSONObject)object;
+                if (ticket != null){
+                    displayTicket(ticket);
+                }
+            }
+        }
+        return true;
+    }
+
+    public static void queryAllTickets() {
         String query = singleTicket + "?page[size]=25";
-        queryTickForEachPage(query, true);
+        queryTickForEachPage(query,true);
     }
 }
